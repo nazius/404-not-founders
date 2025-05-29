@@ -16,19 +16,34 @@ export function FeedReader() {
   const [searchQuery, setSearchQuery] = useState("")
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const { getPinnedLinks } = usePinnedArticles()
+  const { getPinnedLinks, pinnedArticles, isLoaded } = usePinnedArticles()
 
   const sortArticlesWithPinned = (articles: Article[]): Article[] => {
+    if (!isLoaded) return articles // Don't sort until pinned data is loaded
+
     const pinnedLinks = getPinnedLinks()
     const pinned = articles.filter((article) => pinnedLinks.includes(article.link))
     const unpinned = articles.filter((article) => !pinnedLinks.includes(article.link))
 
-    // Sort pinned articles by publication date (most recent first)
-    // Sort unpinned articles by publication date
-    return [
-      ...pinned.sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime()),
-      ...unpinned.sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime()),
-    ]
+    // Sort pinned articles by their pin order (most recently pinned first)
+    const sortedPinned = pinned.sort((a, b) => {
+      const aPinnedData = pinnedArticles.find((p) => p.link === a.link)
+      const bPinnedData = pinnedArticles.find((p) => p.link === b.link)
+
+      if (!aPinnedData || !bPinnedData) {
+        // Fallback to publication date if pin data is missing
+        return new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime()
+      }
+
+      // Sort by pin time (most recently pinned first)
+      return bPinnedData.pinnedAt - aPinnedData.pinnedAt
+    })
+
+    // Sort unpinned articles by publication date (most recent first)
+    const sortedUnpinned = unpinned.sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime())
+
+    // Return pinned articles first, then unpinned articles
+    return [...sortedPinned, ...sortedUnpinned]
   }
 
   const fetchFeeds = async (feeds: FeedType[]) => {
@@ -72,18 +87,23 @@ export function FeedReader() {
   }
 
   useEffect(() => {
-    if (selectedFeeds.length > 0) {
+    if (selectedFeeds.length > 0 && isLoaded) {
       fetchFeeds(selectedFeeds)
     }
-  }, [selectedFeeds])
+  }, [selectedFeeds, isLoaded])
 
   // Re-sort articles when pinned articles change
   useEffect(() => {
-    if (articles.length > 0) {
+    if (articles.length > 0 && isLoaded) {
       const sortedArticles = sortArticlesWithPinned(articles)
-      setArticles(sortedArticles)
+      // Only update if the order actually changed
+      const currentOrder = articles.map((a) => a.link).join(",")
+      const newOrder = sortedArticles.map((a) => a.link).join(",")
+      if (currentOrder !== newOrder) {
+        setArticles(sortedArticles)
+      }
     }
-  }, [getPinnedLinks().join(",")])
+  }, [getPinnedLinks().join(","), pinnedArticles.map((p) => p.pinnedAt).join(","), isLoaded])
 
   useEffect(() => {
     if (searchQuery.trim() === "") {
@@ -98,7 +118,7 @@ export function FeedReader() {
       )
       setFilteredArticles(sortArticlesWithPinned(filtered))
     }
-  }, [searchQuery, articles])
+  }, [searchQuery, articles, isLoaded])
 
   const handleFeedChange = (feeds: FeedType[]) => {
     setSelectedFeeds(feeds)
@@ -127,6 +147,15 @@ export function FeedReader() {
           <RefreshButton onRefresh={handleRefresh} isLoading={isLoading} />
         </div>
       </div>
+
+      {/* Show pinned articles count if any */}
+      {isLoaded && pinnedArticles.length > 0 && (
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <span className="inline-flex items-center gap-1 px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium">
+            📌 {pinnedArticles.length} pinned article{pinnedArticles.length !== 1 ? "s" : ""}
+          </span>
+        </div>
+      )}
 
       {error ? (
         <div

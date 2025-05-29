@@ -18,23 +18,36 @@ interface ArticleCardProps {
 export function ArticleCard({ article }: ArticleCardProps) {
   const [showSummary, setShowSummary] = useState(false)
   const [imageError, setImageError] = useState(false)
-  const { isPinned, togglePin } = usePinnedArticles()
+  const { isPinned, togglePin, isLoaded } = usePinnedArticles()
 
-  const pinned = isPinned(article.link)
+  const pinned = isLoaded ? isPinned(article.link) : false
 
   const handleTogglePin = () => {
-    togglePin(article.link, article.title)
+    if (isLoaded) {
+      togglePin(article.link, article.title)
+    }
   }
 
   return (
     <>
       <Card
         className={`h-full flex flex-col overflow-hidden transition-all duration-200 ${
-          pinned ? "ring-2 ring-yellow-400 shadow-lg" : ""
+          pinned
+            ? "ring-2 ring-yellow-400 shadow-lg bg-gradient-to-br from-yellow-50 to-amber-50 border-yellow-200"
+            : "hover:shadow-md"
         }`}
         role="article"
         aria-labelledby={`article-title-${article.link.replace(/[^a-zA-Z0-9]/g, "")}`}
       >
+        {/* Pinned indicator */}
+        {pinned && (
+          <div className="absolute top-2 left-2 z-10">
+            <div className="inline-flex items-center gap-1 px-2 py-1 bg-yellow-500 text-white rounded-full text-xs font-medium shadow-sm">
+              📌 Pinned
+            </div>
+          </div>
+        )}
+
         {article.image && !imageError && (
           <div className="relative w-full h-48 bg-gray-100 overflow-hidden">
             <Image
@@ -71,12 +84,17 @@ export function ArticleCard({ article }: ArticleCardProps) {
               variant={pinned ? "default" : "ghost"}
               size="sm"
               onClick={handleTogglePin}
-              className={`flex-shrink-0 ${pinned ? "text-yellow-600 bg-yellow-50 hover:bg-yellow-100" : ""}`}
+              disabled={!isLoaded}
+              className={`flex-shrink-0 transition-all duration-200 ${
+                pinned
+                  ? "text-yellow-700 bg-yellow-200 hover:bg-yellow-300 border-yellow-400 shadow-sm"
+                  : "hover:bg-gray-100 text-gray-600"
+              }`}
               aria-label={pinned ? `Unpin article: ${article.title}` : `Pin article: ${article.title}`}
               aria-pressed={pinned}
             >
               {pinned ? (
-                <Pin className="h-4 w-4" aria-hidden="true" />
+                <Pin className="h-4 w-4 fill-current" aria-hidden="true" />
               ) : (
                 <PinOff className="h-4 w-4" aria-hidden="true" />
               )}
