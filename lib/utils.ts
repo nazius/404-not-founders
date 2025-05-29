@@ -60,6 +60,7 @@ export function extractTags(description: string): string[] {
   const lowerDesc = description.toLowerCase()
   return commonTags.filter((tag) => lowerDesc.includes(tag))
 }
+
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
