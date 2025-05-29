@@ -179,7 +179,8 @@ CMD ["npm", "start"]
 
 Your project is live at:
 
-**[https://vercel.com/nazius-projects/v0-404-not-founders](https://vercel.com/nazius-projects/v0-404-not-founders)**
+
+**[https://v0-404-not-founders.vercel.app](https://v0-404-not-founders.vercel.app)**
 
 ## Build your app
 
