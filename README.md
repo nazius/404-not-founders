@@ -28,26 +28,26 @@ DevStream is a modern, accessible RSS feed reader designed specifically for deve
 ## Installation
 
 1. **Clone the repository**
-   \`\`\`bash
+   ```
    git clone https://github.com/nazius/404-not-founders.git
    cd 404-not-founders
-   \`\`\`
+   ```
 
 2. **Install dependencies**
-   \`\`\`bash
+   ```
    npm install
-   \`\`\`
+   ```
 
 3. **Set up environment variables**
    Create a `.env.local` file in the root directory:
-   \`\`\`bash
+   ```
    OPENAI_API_KEY=your_openai_api_key_here
-   \`\`\`
+   ```
 
 4. **Run the development server**
-   \`\`\`bash
+   ```
    npm run dev
-   \`\`\`
+   ```
 
 5. **Open your browser**
    Navigate to [http://localhost:3000](http://localhost:3000)
@@ -55,24 +55,24 @@ DevStream is a modern, accessible RSS feed reader designed specifically for deve
 ## Build & Production
 
 ### Development
-\`\`\`bash
+```
 npm run dev
-\`\`\`
+```
 
 ### Build for production
-\`\`\`bash
+```
 npm run build
-\`\`\`
+```
 
 ### Start production server
-\`\`\`bash
+```
 npm start
-\`\`\`
+```
 
 ### Lint code
-\`\`\`bash
+```
 npm run lint
-\`\`\`
+```
 
 ## Environment Variables
 
@@ -85,43 +85,43 @@ npm run lint
 
 ### Development
 For development, simply run:
-\`\`\`bash
+```
 npm run dev
-\`\`\`
+```
 The development server will automatically reload when you make changes.
 
 ### Production (Local)
-\`\`\`bash
+```
 npm run build
 npm start
-\`\`\`
+```
 
 ### Production (PM2 - Recommended)
 For production environments, use PM2 to keep the application running:
 
 1. **Install PM2 globally**
-   \`\`\`bash
+   ```
    npm install -g pm2
-   \`\`\`
+   ```
 
 2. **Build the application**
-   \`\`\`bash
+   ```
    npm run build
-   \`\`\`
+   ```
 
 3. **Start with PM2**
-   \`\`\`bash
+   ```
    pm2 start npm --name "devstream" -- start
-   \`\`\`
+   ```
 
 4. **Save PM2 configuration**
-   \`\`\`bash
+   ```
    pm2 save
    pm2 startup
-   \`\`\`
+   ```
 
 ### Production (Docker)
-\`\`\`dockerfile
+```
 FROM node:18-alpine
 WORKDIR /app
 COPY package*.json ./
@@ -130,7 +130,7 @@ COPY . .
 RUN npm run build
 EXPOSE 3000
 CMD ["npm", "start"]
-\`\`\`
+```
 
 ## Technology Stack
 
@@ -145,7 +145,7 @@ CMD ["npm", "start"]
 
 ## Project Structure
 
-\`\`\`
+```
 ├── app/                    # Next.js app directory
 │   ├── api/               # API routes
 │   ├── globals.css        # Global styles
@@ -160,7 +160,7 @@ CMD ["npm", "start"]
 ├── hooks/                # Custom React hooks
 ├── lib/                  # Utility functions
 └── public/              # Static assets
-\`\`\`
+```
 
 ## API Endpoints
 
