@@ -7,6 +7,7 @@ import { ArticleList } from "./article-list"
 import { RefreshButton } from "./refresh-button"
 import { parseRssFeed } from "@/lib/rss-parser"
 import type { Article, FeedType } from "@/lib/types"
+import { usePinnedArticles } from "@/hooks/use-pinned-articles"
 
 export function FeedReader() {
   const [articles, setArticles] = useState<Article[]>([])
@@ -15,6 +16,20 @@ export function FeedReader() {
   const [searchQuery, setSearchQuery] = useState("")
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const { getPinnedLinks } = usePinnedArticles()
+
+  const sortArticlesWithPinned = (articles: Article[]): Article[] => {
+    const pinnedLinks = getPinnedLinks()
+    const pinned = articles.filter((article) => pinnedLinks.includes(article.link))
+    const unpinned = articles.filter((article) => !pinnedLinks.includes(article.link))
+
+    // Sort pinned articles by publication date (most recent first)
+    // Sort unpinned articles by publication date
+    return [
+      ...pinned.sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime()),
+      ...unpinned.sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime()),
+    ]
+  }
 
   const fetchFeeds = async (feeds: FeedType[]) => {
     setIsLoading(true)
@@ -45,16 +60,12 @@ export function FeedReader() {
         allArticles.push(...articles)
       })
 
-      // Sort by publication date (newest first)
-      allArticles.sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime())
-
-      setArticles(allArticles)
-      setFilteredArticles(allArticles)
+      const sortedArticles = sortArticlesWithPinned(allArticles)
+      setArticles(sortedArticles)
     } catch (err) {
       console.error("Error fetching feeds:", err)
       setError("Failed to load feeds. Please try again.")
       setArticles([])
-      setFilteredArticles([])
     } finally {
       setIsLoading(false)
     }
@@ -65,6 +76,14 @@ export function FeedReader() {
       fetchFeeds(selectedFeeds)
     }
   }, [selectedFeeds])
+
+  // Re-sort articles when pinned articles change
+  useEffect(() => {
+    if (articles.length > 0) {
+      const sortedArticles = sortArticlesWithPinned(articles)
+      setArticles(sortedArticles)
+    }
+  }, [getPinnedLinks().join(",")])
 
   useEffect(() => {
     if (searchQuery.trim() === "") {
@@ -77,7 +96,7 @@ export function FeedReader() {
           article.description.toLowerCase().includes(query) ||
           article.content.toLowerCase().includes(query),
       )
-      setFilteredArticles(filtered)
+      setFilteredArticles(sortArticlesWithPinned(filtered))
     }
   }, [searchQuery, articles])
 
@@ -96,7 +115,11 @@ export function FeedReader() {
   }
 
   return (
-    <div className="space-y-6">
+    <main className="space-y-6" data-feed-section role="main" aria-labelledby="feeds-heading">
+      <div className="sr-only">
+        <h2 id="feeds-heading">Developer RSS Feeds</h2>
+      </div>
+
       <div className="flex flex-col sm:flex-row justify-between gap-4">
         <FeedSelector selectedFeeds={selectedFeeds} onFeedChange={handleFeedChange} />
         <div className="flex gap-2">
@@ -106,10 +129,16 @@ export function FeedReader() {
       </div>
 
       {error ? (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">{error}</div>
+        <div
+          className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded"
+          role="alert"
+          aria-live="polite"
+        >
+          {error}
+        </div>
       ) : (
         <ArticleList articles={filteredArticles} isLoading={isLoading} />
       )}
-    </div>
+    </main>
   )
 }
